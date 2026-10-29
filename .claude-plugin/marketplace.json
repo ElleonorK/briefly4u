@@ -1,0 +1,13 @@
+{
+  "name": "briefly4u",
+  "owner": {
+    "name": "Elleonor Kulesko"
+  },
+  "plugins": [
+    {
+      "name": "briefly4u",
+      "source": "./plugin",
+      "description": "Set up, tune and schedule your own daily brief."
+    }
+  ]
+}

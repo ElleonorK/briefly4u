@@ -1,0 +1,312 @@
+# examples/profiles/dana.example.yaml: the public reference profile.
+# EXAMPLE: an invented persona (Dana Example, Lisbon). Nothing here is copied from a real person's setup
+# (DECISIONS.md #9); it exercises every section so the golden tests cover the whole generator.
+# "# ref" marks a value that differs from the zero-config default.
+apiVersion: briefly4u/v1
+kind: Profile
+
+kit:                                        # how this profile is built and installed (DESIGN.md §0)
+  version: 0.1.0                            # kit/plugin version that last generated it; briefly4u.lock pins the packs
+  target: claude                            # claude | grokbot | cursor | generic | actions (chatgpt later)
+  installed_via: plugin                     # plugin (/briefly4u:setup in Claude Code) | builder (zip) | cli (briefly4u build)
+  runner: claude_schedule                   # what the top-level schedule: becomes on this target (DESIGN.md §10)
+
+# ───────────────────────── global ─────────────────────────
+identity:
+  name: Dana Example
+  address_as: Dana
+  reader_level: devops                      # ref (default: general)
+
+locale:                                     # basics tier
+  language: en
+  region: PT
+  timezone: Europe/Lisbon
+  date_format: "Ddd D Mon YYYY"             # "Tue 20 Oct 2026"
+  clock: 24h                                # default for PT
+  first_day_of_week: mon                    # default for PT
+  units: { temperature: C, wind: kmh, rain: mm, waves: m }   # defaults for PT
+  never_words: [TODAY]                      # ref: the date is highlighted instead
+
+calendar_model:
+  work_week: [mon, tue, wed, thu, fri]      # default for PT
+  day_types:
+    workday: [tue, wed, thu, fri]
+    monday: [mon]                           # first workday of the week
+    saturday: [sat]
+    sunday: [sun]
+  weekend_hides: [calendar, messaging, email]
+  window:                                   # what counts as "new" (DECISIONS.md #2)
+    mode: since_last_success                # default; alternative: fixed
+    fixed: { from: "yesterday 10:00", to: now }   # used when mode is fixed, and as the fallback when there is no prior successful brief
+    first_workday: { from: "last workday 10:00", to: now }   # fixed mode only: Monday → Friday 10:00
+    max_lookback: 72h
+
+schedule:
+  - { time: "09:00", days: daily }          # ref (default 08:00)
+
+basics:                                     # global cheap toggles
+  items_cap: 5
+  link_style: chips                         # "Reuters ↗"
+  open_links: new_tab
+  emoji: from_tone
+  header_pills: true
+  highlight_today: true
+  outputs: [pdf, html]
+  pdf_width: 1280
+
+tone: cheeky                                # ref (default: warm)
+theme: neon-dark                            # ref (default: calm-minimal)
+header: { headline: auto, subtitle: auto }
+
+# ───────────────────────── connections ─────────────────────────
+# The brief runs inside your agent, which already holds these accounts, so auth = assistant_connector and the kit
+# never touches a token. A standalone install would use auth: oauth with secret_ref: keychain:briefly4u/<profile>/<id>.
+connections:
+  - id: google-work
+    provider: google_workspace
+    account: you@example.com
+    domain: example.com
+    auth: assistant_connector               # alternatives: oauth (preferred standalone), app_password (fallback only)
+    scopes: [calendar.events.readonly, gmail.readonly]
+    secret_ref: "assistant:gmail"           # calendar uses assistant:google-calendar
+    secret_ref_calendar: "assistant:google-calendar"
+  - id: slack-work
+    provider: slack
+    workspace: example-workspace
+    auth: assistant_connector
+    scopes: [search:read, im:history, mpim:history, channels:history, groups:history, users:read, files:write, chat:write]
+    secret_ref: "assistant:slack"
+
+# ───────────────────────── delivery ─────────────────────────
+delivery:
+  - id: my-dm
+    adapter: slack_dm
+    connection: slack-work
+    channel: "<YOUR_SLACK_DM_TO_SELF_ID>"   # filled in by /briefly4u:setup; the ONLY place anything is posted
+    as_new_top_level_message: true
+    basics: { send_pdf: true, send_html: true, message: header_lines, mention_top_story: true }
+    posts:
+      - { artifact: pdf,  title: "Daily brief · {date}", message: header }                                   # laptop
+      - { artifact: html, title: "Daily brief · {date} (phone version)",
+          message: '📱 Phone version: open in your browser via "share in another app"' }                      # phone
+    on_failure: { retry: 1, then: notify_owner_chat }
+  - id: local-files
+    adapter: file
+    path: "~/briefly4u/out/daily-brief-{date}.{ext}"
+    artifacts: [html, pdf]
+
+render:
+  pdf:  { width_px: 1280, single_page: true }
+  html: { responsive_breakpoint_px: 720 }
+
+# ───────────────────────── sections (order = page order) ─────────────────────────
+sections:
+  - id: calendar
+    when: [workday, monday]
+    width: full
+    accent: cy
+    connection: google-work
+    basics:
+      show_location: true
+      show_join_buttons: true               # safe links only; credential URLs are always dropped
+      show_event_chip: true
+      flag_rsvp: true
+      flag_overlaps: true
+      show_declined: false
+      all_day_events: top_line
+      time_format: range                    # 10:00–11:00
+    settings:
+      calendars: [primary]
+      day_rules: { monday: { only_before: "10:30" } }   # ref
+      join_links: safe_only
+    pill: true
+
+  - id: weather
+    when: always
+    width: full
+    accent: mg
+    basics:
+      show: { high_low: true, feels_like: false, rain: true, wind: true, humidity: true, cloud_cover: true,
+              uv: false, sunrise_sunset: false, air_quality: true, waves: true, trend_chart: true, warnings: true }
+      units: from_locale                    # °C · km/h · mm · m
+    settings:
+      cities:                               # ref: two cities, coordinates fixed (no re-geocoding)
+        - { name: Lisbon, country: PT, lat: 38.72225, lon: -9.13934 }
+        - { name: Porto,  country: PT, lat: 41.14961, lon: -8.61099 }
+      header_city: Lisbon
+      forecast: { provider: open_meteo, model: ecmwf_ifs025 }   # ref (default best_match)
+      air_quality: { provider: open_meteo_eaqi }
+      warn_if: { high_c_gte: 35, low_c_lte: 5, gusts_kmh_gte: 60, rain_mm_gte: 20, thunderstorm: true, waves_m_gte: 2.5, air: very_poor }
+
+  - id: observances                         # "Holidays & observances" (merged holidays + Pastafarian)
+    when: always
+    hide_when_empty: true
+    basics:
+      look_ahead: 2d
+      show_fasts: true
+      minor_observances: false
+      show_tomorrow_fun: true
+    settings:
+      faiths:
+        - faith: national
+          source: nager-date                # PT is covered by Nager.Date; each country needs a verified source (DECISIONS.md #4a)
+          country: PT
+          lookahead_days: 2
+          card: shared                      # → "🎉 Holidays" half card
+        - faith: christian
+          tradition: catholic
+          source: church-calendar-api       # pack default
+          show: [holidays]
+          card: shared
+        - faith: pastafarian
+          source: pastafariancalendar
+          card: own                         # → "🍝 Pastafarian" half card next to the holidays card
+          show_tomorrow: true
+    layout: { width: half, accent: { national: am, christian: am, pastafarian: li } }
+
+  - id: messaging
+    title: "💬 Slack"
+    when: [workday, monday]
+    width: half
+    accent: vi
+    basics:
+      include: { dm: true, group_dm: true, direct_mention: true, thread_reply: false }
+      hide_already_answered: true
+      app_counts: true
+      tags: true
+      summary: one_line
+      max_items: 5
+    settings:
+      connections: [slack-work]
+      exclude: [here, channel, everyone, usergroup, bots, self_dm]
+    pill: true
+
+  - id: email
+    when: [workday, monday]
+    width: half
+    accent: cy
+    connection: google-work
+    basics:
+      unread_only: true
+      humans_only: true
+      hide_calendar_mail: true
+      show_cc_tag: true
+      subject_length: 70
+      summary: one_sentence
+      max_items: 5
+    settings:
+      mailbox: you@example.com
+      body_access: plain_text_when_needed
+    pill: true
+
+  - id: news
+    title: "🛰️ AI · Frontier tech · Cybersecurity"   # ref
+    when: always
+    hide_when_empty: true
+    width: full
+    accent: vi
+    basics:
+      quality: strict                       # strict (default) | relaxed; relaxed still needs reliable sources and something new
+      max_stories: 8                        # ref (default 6)
+      summary_length: standard              # 200–260 characters
+      show_date_line: true
+      chips_per_story: up_to_3
+      label_non_english: true
+      still_open_strip: true
+      fun_topics: true
+      local_outlets: true
+    settings:
+      topics:                               # reference tags, in order; colours from the neon-dark theme
+        - { id: ai,       label: AI,             colour: "#a98bff", pack: ai }        # light violet
+        - { id: launch,   label: LAUNCH,         colour: "#7ab8ff", pack: launch }    # sky
+        - { id: space,    label: SPACE,          colour: "#22e6ff", pack: space }     # cyan
+        - { id: robotics, label: ROBOTICS,       colour: "#a6ff3d", pack: robotics }  # lime
+        - { id: drone,    label: DRONE,          colour: "#ff3df2", pack: drone }     # magenta
+        - { id: breach,   label: BREACH,         colour: "#ff3b5c", pack: breach }    # red
+        - { id: vuln,     label: VULN,           colour: "#ffc53d", pack: vuln }      # amber
+        - { id: outage,   label: OUTAGE,         colour: "#ff6316", pack: outage }    # tangerine 
+        - { id: ai-art,   label: AI-ART,         colour: "#ff8a3d", pack: ai-art }    # orange
+        - { id: ai-wild,  label: AI-IN-THE-WILD, colour: "#3dffb5", pack: ai-wild }   # mint
+        - { id: weird,    label: WEIRD-SCIENCE,  colour: "#ff9ecb", pack: weird }     # pink
+      min_non_us_outlets: 1
+      local_sources: [Público, Expresso, Observador, CNCS (PT national cyber centre)]
+      still_open: { max_lines: 5, freshness_days: 14 }
+
+  - id: warning
+    when: always
+    hide_when_empty: true
+    width: full
+    accent: rd
+    basics:
+      watch: all_platforms                  # switches to my_devices once devices are added
+      platforms: [windows, macos, ios, android, samsung, pixel, dell, hp, lenovo, surface]
+      include_resolved_today: false
+      include_borderline: false
+      platform_logos: true
+    settings:
+      my_devices: []
+      # EXAMPLE (invented devices):
+      # - { name: "Work laptop", platform: windows, os: "Windows 11", version: "25H2", oem: dell }
+      # - { name: "Phone", platform: android, os: "One UI", version: "8", oem: samsung }
+      match: same_major
+
+  - id: coming-up
+    when: always
+    hide_when_empty: true
+    width: half
+    accent: am
+    basics:
+      horizon_days: 60
+      max_events: 5
+      regions: [worldwide, PT]
+      event_types: [cloud, kubernetes, ai, security, devtools]
+      order: by_date
+      mark_home_country: true
+      this_week_hint: true
+    settings:
+      selection: merit_only                 # ref: no home-country quota
+      exclude_types: [meetups, webinars, vendor_local_days, pitch_competitions]
+      local_marker:                         # PT tag
+        region: PT
+        label: PT
+        style: { text: "#006600", background: "#ffffff", border: "#ff0000", ring: "#ffffff", weight: 600 }
+      local_sources: []                     # EXAMPLE: add an events feed (RSS/ICS) here
+
+  - id: closing
+    when: always
+    width: full
+    accent: cy
+    basics:
+      show: true
+      styles: from_tone                     # cheeky → bug, errmsg, codecmt, comic
+      xkcd_row: true
+      tie_in: true
+      emoji: from_tone                      # 2–4
+    settings:
+      never_about: [victims, war, injuries]
+      no_repeat_log: true
+      avoid_overlap_with: [observances.pastafarian]
+
+# ───────────────────────── add your own (private by default) ─────────────────────────
+custom:
+  # EXAMPLE entries only, disabled. They show the form fields from DESIGN.md §9.7 (feeds and APIs only, DECISIONS.md #5).
+  - id: example-cert-feed
+    enabled: false
+    kind: source
+    section: news
+    name: "EXAMPLE · national CERT alerts feed"
+    source: { type: rss, url: "https://example.invalid/alerts.rss" }
+    auth: none
+    refresh: every_run
+    trust: trusted
+    topics: [vuln]
+    visibility: private
+  - id: example-joke-list
+    enabled: false
+    kind: joke_source
+    section: closing
+    name: "EXAMPLE · my verified error messages"
+    source: { type: manual }
+    items:
+      - { quote: "EXAMPLE text", source_url: "https://example.invalid/bug/1", verified: 2026-10-22 }
+    visibility: private

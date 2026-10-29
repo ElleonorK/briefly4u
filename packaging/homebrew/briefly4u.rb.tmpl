@@ -1,0 +1,21 @@
+# Homebrew formula for <user>/homebrew-tap, rendered by .github/workflows/release.yml on each tag.
+# Builds from the source tarball with Go, so the binary is compiled on the user's machine: no Apple
+# signing or notarisation involved (DECISIONS.md #13). Placeholders: @OWNER@ @VERSION@ @SHA256@ @HOMEPAGE@
+class Briefly4u < Formula
+  desc "Set up your own daily brief for your own AI agent"
+  homepage "@HOMEPAGE@"
+  url "https://github.com/@OWNER@/briefly4u/archive/refs/tags/v@VERSION@.tar.gz"
+  sha256 "@SHA256@"
+  license "MIT"
+
+  depends_on "go" => :build
+
+  def install
+    ldflags = "-s -w -X main.version=#{version}"
+    system "go", "build", *std_go_args(ldflags: ldflags), "./cmd/briefly4u"
+  end
+
+  test do
+    assert_match version.to_s, shell_output("#{bin}/briefly4u version")
+  end
+end

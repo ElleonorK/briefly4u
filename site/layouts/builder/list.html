@@ -1,0 +1,13 @@
+{{ define "main" }}
+<main class="builder" data-schema="{{ "schema/profile.schema.json" | relURL }}">
+  <h1>{{ .Title }}</h1>
+  {{ .Content }}
+  <noscript>The builder needs JavaScript. Everything stays in your browser.</noscript>
+  <div id="b4u-wizard" aria-live="polite"></div>
+  <iframe id="b4u-preview" title="EXAMPLE preview" sandbox="allow-same-origin"></iframe>
+  <button id="b4u-export" disabled>Download profile.yaml + bundle.zip</button>
+</main>
+<!-- wasm_exec.js is copied from $(go env GOROOT)/lib/wasm/ at build time; briefly4u.wasm is built in CI. -->
+<script src="{{ "builder/wasm_exec.js" | relURL }}" defer></script>
+<script src="{{ "builder/builder.js" | relURL }}" defer></script>
+{{ end }}

@@ -1,0 +1,11 @@
+# The smallest valid profile: everything else uses defaults derived from locale and timezone.
+apiVersion: briefly4u/v1
+kind: Profile
+identity: { name: Sam Example }
+locale: { timezone: Europe/Berlin }
+sections:
+  - id: weather
+    settings:
+      cities: [ { name: Berlin, country: DE, lat: 52.52437, lon: 13.41053 } ]
+  - id: news
+  - id: closing

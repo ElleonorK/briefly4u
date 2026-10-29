@@ -1,0 +1,23 @@
+# One faith pack per file. Sources checked 22 Oct 2026; nothing is fetched at build time.
+# Launch rule (DECISIONS.md #4): a faith pack ships only with a verified default source.
+apiVersion: briefly4u/v1
+kind: FaithPack
+id: jewish
+label: Jewish holidays
+version: 1.0.0
+status: stable
+license: MIT
+maintainers: []   # the maintainer reviews all changes for now; tradition reviewers later (DECISIONS.md #12)
+checked: 2026-10-22
+traditions: { schedule: [israel, diaspora] }
+show_options: [holidays, fasts, observances, native_date, times, weekly_card]
+default_source:
+  id: hebcal
+  type: json_api
+  url: "https://www.hebcal.com/hebcal"
+  docs: "https://www.hebcal.com/home/developer-apis"
+  status: verified
+  note: "also the national-holidays default for Israel (modern Israeli national days), since Nager.Date has no Israel data"
+alternatives: []
+weekly_card: { name: Shabbat, rows: [candle_lighting, havdalah], placement: calendar_slot_on_weekend }
+card: shared

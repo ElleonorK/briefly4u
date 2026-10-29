@@ -1,0 +1,69 @@
+# Hugo site: landing, docs, gallery, library browser, builder, contribute. Plain static output: served from
+# GitHub Pages (<user>.github.io/briefly4u) or from the maintainer's own hosting provider/domain. Nothing provider-specific.
+# Theme: Hextra (Hugo module, no Node/PostCSS needed). TODO: pin the module version in site/go.mod.
+baseURL = "https://elleonork.github.io/briefly4u/"
+title = "Briefly4U"
+copyright = "© 2026 Elleonor Kulesko · MIT License"
+languageCode = "en"
+enableRobotsTXT = true
+enableGitInfo = true
+disableKinds = ["taxonomy", "term"]
+
+[module]
+  [[module.imports]]
+    path = "github.com/imfing/hextra"
+  # The library and schema live outside site/; mount them so pages can read packs at build time.
+  [[module.mounts]]
+    source = "content"
+    target = "content"
+  [[module.mounts]]
+    source = "static"
+    target = "static"
+  [[module.mounts]]
+    source = "assets"
+    target = "assets"
+  [[module.mounts]]
+    source = "../library"
+    target = "assets/library"
+  [[module.mounts]]
+    source = "../schema"
+    target = "static/schema"
+
+[params]
+  description = "Your own daily brief, run by your own AI agent. Free and open source."
+  [params.navbar]
+    displayTitle = true
+  [params.footer]
+    displayCopyright = true
+  [params.page]
+    width = "wide"
+  # No analytics code in the site (DECISIONS.md #13: analytics, if any, come from the hosting provider).
+
+[menu]
+  [[menu.main]]
+    name = "Docs"
+    pageRef = "/docs"
+    weight = 1
+  [[menu.main]]
+    name = "Gallery"
+    pageRef = "/gallery"
+    weight = 2
+  [[menu.main]]
+    name = "Library"
+    pageRef = "/library"
+    weight = 3
+  [[menu.main]]
+    name = "Builder"
+    pageRef = "/builder"
+    weight = 4
+  [[menu.main]]
+    name = "Contribute"
+    pageRef = "/contribute"
+    weight = 5
+  [[menu.main]]
+    name = "GitHub"
+    url = "https://github.com/ElleonorK/briefly4u"
+    weight = 6
+
+[markup.goldmark.renderer]
+  unsafe = false   # content is markdown only; the builder page uses its own layout

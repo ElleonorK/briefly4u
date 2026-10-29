@@ -1,0 +1,53 @@
+/*---
+apiVersion: briefly4u/v1
+kind: ThemePack
+id: neon-dark
+name: Neon dark
+version: 1.0.0
+status: stable
+license: MIT
+mode: dark
+fonts: { display: Orbitron, body: Space Grotesk, mono: JetBrains Mono }
+font_url: "https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap"
+---*/
+/* Variables only; layout lives in core.css. */
+:root{
+  /* page */
+  --bg:#07070f;
+  --bg-image:radial-gradient(900px 500px at 10% -5%,rgba(139,92,255,.25),transparent),
+             radial-gradient(800px 500px at 95% 5%,rgba(34,230,255,.18),transparent),
+             linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),
+             linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);
+  --bg-size:auto,auto,40px 40px,40px 40px;
+  /* text */
+  --tx:#e8e8f5; --soft:#c9c9e0; --mu:#9a9ab8;
+  --heading-fill:linear-gradient(90deg,#22e6ff,#ff3df2);
+  --link:#22e6ff;
+  /* accents */
+  --cy:#22e6ff; --mg:#ff3df2; --li:#a6ff3d; --am:#ffc53d; --vi:#8b5cff; --rd:#ff3b5c;
+  --sky:#7ab8ff; --mint:#3dffb5; --or:#ff8a3d;
+  /* surfaces */
+  --card-bg:rgba(255,255,255,.045); --card-border:rgba(255,255,255,.1); --card-blur:6px; --card-shadow:none;
+  --line:rgba(255,255,255,.08);
+  --pill-bg:rgba(34,230,255,.07); --chip-hover:rgba(34,230,255,.15);
+  --btn-bg:#0e0e1c; --btn-border:linear-gradient(90deg,#22e6ff,#ff3df2); --btn-tx:#8ff4ff;
+  --btn-glow:-6px 0 16px -5px rgba(34,230,255,.45),6px 0 16px -5px rgba(255,61,242,.45);
+  /* states */
+  --today:#ff3df2;
+  --warn-bg:rgba(255,59,92,.09); --warn-border:rgba(255,59,92,.55); --warn-glow:0 0 28px rgba(255,59,92,.25);
+  /* news topic tags */
+  --tag-ai:#8b5cff; --tag-launch:#7ab8ff; --tag-space:#22e6ff; --tag-robotics:#a6ff3d; --tag-drone:#ff3df2;
+  --tag-breach:#ff3b5c; --tag-vuln:#ffc53d; --tag-outage:#ff6316; --tag-ai-art:#ff8a3d; --tag-ai-wild:#3dffb5; --tag-weird:#ff9ecb;
+  /* status / platform / closing tags */
+  --tag-reply:#ffc53d; --tag-fyi:#7ab8ff; --tag-cc:#8b5cff; --tag-mention:#ff3df2; --tag-dm:#22e6ff; --tag-gdm:#a6ff3d;
+  --tag-thread:#3dffb5; --tag-overlap:#ff3b5c; --tag-rsvp:#ff8a3d; --tag-example:#ff9ecb;
+  --tag-win:#00a4ef; --tag-apple:#d8d8ea; --tag-android:#3ddc84; --tag-oem:#ffb070;
+  --tag-bug:#fff06a; --tag-errmsg:#ff6f61; --tag-codecmt:#2ec4b6; --tag-comic:#a8b4ff;
+  --tag-tint:11%;
+  /* air quality */
+  --aq-good:#a6ff3d; --aq-moderate:#ffc53d; --aq-poor:#ff3b5c; --aq-verypoor:#ff3df2;
+  /* fonts */
+  --head:Orbitron,sans-serif;
+  --body:'Space Grotesk',system-ui,-apple-system,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,monospace;
+}

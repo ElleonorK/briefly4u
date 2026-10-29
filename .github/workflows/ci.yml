@@ -1,0 +1,42 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5            # TODO: pin all actions by commit SHA (Dependabot keeps them fresh)
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.5
+      - run: go test -race ./...
+      - name: Golden files are up to date
+        run: go test ./internal/generator -update && git diff --exit-code tests/golden
+      - name: Validate example profiles
+        run: |
+          go build -o bin/briefly4u ./cmd/briefly4u
+          for f in examples/profiles/*.yaml; do bin/briefly4u validate "$f"; done
+      - name: WebAssembly build (builder)
+        run: |
+          GOOS=js GOARCH=wasm go build -trimpath -ldflags="-s -w" -o bin/briefly4u.wasm ./cmd/briefly4u-wasm
+          ls -l bin/briefly4u.wasm
+  plugin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Plugin manifests are valid JSON
+        run: for f in plugin/plugin.json plugin/.cursor-plugin/plugin.json plugin/.claude-plugin/plugin.json .cursor-plugin/marketplace.json .claude-plugin/marketplace.json; do jq empty "$f"; done
+      - name: Plugin version matches the release version
+        run: test "$(jq -r .version plugin/.cursor-plugin/plugin.json)" = "$(jq -r .version plugin/.claude-plugin/plugin.json)"
+      # TODO: validate .cursor-plugin/plugin.json against https://raw.githubusercontent.com/cursor/plugins/main/schemas/plugin.schema.json
+      # TODO: `claude plugin validate ./plugin` once the Claude Code CLI can run headless in CI.

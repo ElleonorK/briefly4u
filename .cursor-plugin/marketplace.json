@@ -1,0 +1,16 @@
+{
+  "name": "briefly4u",
+  "owner": {
+    "name": "Elleonor Kulesko"
+  },
+  "metadata": {
+    "description": "Briefly4U: your own daily brief, run by your own agent."
+  },
+  "plugins": [
+    {
+      "name": "briefly4u",
+      "source": "./plugin",
+      "description": "Set up, tune and schedule your own daily brief."
+    }
+  ]
+}

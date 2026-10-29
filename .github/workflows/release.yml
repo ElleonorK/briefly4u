@@ -1,0 +1,58 @@
+name: release
+on:
+  push:
+    tags: ["v*.*.*"]
+permissions:
+  contents: write      # GitHub Release
+  id-token: write      # Sigstore keyless signing
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    environment: release   # required reviewer = the maintainer; secrets live only here
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - uses: sigstore/cosign-installer@v3
+      - uses: anchore/sbom-action/download-syft@v0
+      - uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}   # the maintainer's personal account (no org)
+          BRIEFLY4U_HOMEPAGE: ${{ vars.BRIEFLY4U_HOMEPAGE || format('https://{0}.github.io/briefly4u/', github.repository_owner) }}
+          SCOOP_BUCKET_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}   # contents:write on <user>/scoop-bucket only
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}               # fork push + PR to microsoft/winget-pkgs
+          AUR_KEY: ${{ secrets.AUR_KEY }}                         # SSH key registered on the AUR account
+
+  homebrew-formula:
+    needs: goreleaser
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v5
+      - name: Render the source-build formula
+        env:
+          OWNER: ${{ github.repository_owner }}
+          VERSION: ${{ github.ref_name }}
+          HOMEPAGE: ${{ vars.BRIEFLY4U_HOMEPAGE || format('https://{0}.github.io/briefly4u/', github.repository_owner) }}
+        run: |
+          v="${VERSION#v}"
+          sha=$(curl -sSfL "https://github.com/${OWNER}/briefly4u/archive/refs/tags/v${v}.tar.gz" | sha256sum | cut -d' ' -f1)
+          sed -e "s#@OWNER@#${OWNER}#g" -e "s#@VERSION@#${v}#g" -e "s#@SHA256@#${sha}#g" -e "s#@HOMEPAGE@#${HOMEPAGE}#g" \
+            packaging/homebrew/briefly4u.rb.tmpl > briefly4u.rb
+      - name: Push to <user>/homebrew-tap
+        env:
+          TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}   # fine-grained PAT: contents:write on <user>/homebrew-tap only
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          git clone "https://x-access-token:${TOKEN}@github.com/${OWNER}/homebrew-tap.git" tap
+          mkdir -p tap/Formula && cp briefly4u.rb tap/Formula/briefly4u.rb
+          cd tap && git config user.name "briefly4u release" && git config user.email "actions@users.noreply.github.com"
+          git add Formula/briefly4u.rb && git commit -m "briefly4u ${GITHUB_REF_NAME}" && git push

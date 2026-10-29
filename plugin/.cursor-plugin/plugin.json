@@ -1,0 +1,27 @@
+{
+  "name": "briefly4u",
+  "displayName": "Briefly4U",
+  "version": "0.1.0",
+  "description": "Set up, tune and schedule your own daily brief in your own AI agent. Interviews you, writes profile.yaml, generates one skill per section and creates the routine. Commands: /briefly4u setup, add-section, tune, preview, doctor, update.",
+  "license": "MIT",
+  "author": {
+    "name": "Elleonor Kulesko"
+  },
+  "publisher": "Elleonor Kulesko",
+  "logo": "assets/logo.svg",
+  "keywords": [
+    "daily-brief",
+    "digest",
+    "morning-brief",
+    "news",
+    "calendar",
+    "productivity"
+  ],
+  "category": "productivity",
+  "tags": [
+    "daily-brief",
+    "skills"
+  ],
+  "skills": "./router/",
+  "rules": "./rules/"
+}

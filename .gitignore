@@ -1,0 +1,11 @@
+/bin/
+/dist/
+/site/public/
+/site/resources/
+/site/static/builder/briefly4u.wasm
+/site/static/builder/wasm_exec.js
+.hugo_build.lock
+# never commit personal profiles or secrets
+profile.yaml
+*.local.yaml
+.env

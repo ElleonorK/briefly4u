@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:briefly4u:schema:pack-topic",
+  "title": "Briefly4U TopicPack front matter",
+  "type": "object",
+  "required": [
+    "apiVersion",
+    "kind",
+    "id",
+    "version",
+    "label",
+    "colour",
+    "reaction"
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "briefly4u/v1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(-[0-9A-Za-z.-]+)?$"
+    },
+    "status": {
+      "enum": [
+        "stable",
+        "beta",
+        "deprecated"
+      ],
+      "default": "beta"
+    },
+    "replaced_by": {
+      "type": "string"
+    },
+    "maintainers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^@[A-Za-z0-9-]+(/[A-Za-z0-9-]+)?$"
+      }
+    },
+    "license": {
+      "const": "MIT"
+    },
+    "checked": {
+      "type": "string",
+      "format": "date",
+      "description": "date the sources were last verified"
+    },
+    "kind": {
+      "const": "TopicPack"
+    },
+    "label": {
+      "type": "string",
+      "pattern": "^[A-Z0-9-]+$"
+    },
+    "colour": {
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$"
+    },
+    "reaction": {
+      "type": "string"
+    },
+    "fun": {
+      "type": "boolean",
+      "default": false
+    },
+    "open_story_log": {
+      "type": "boolean",
+      "default": false
+    },
+    "requires": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "sources": {
+      "type": "object",
+      "properties": {
+        "trusted": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "leads_only": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "added": {
+      "type": "string",
+      "format": "date"
+    },
+    "see_also": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

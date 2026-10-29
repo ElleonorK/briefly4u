@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:briefly4u:schema:pack-tone",
+  "title": "Briefly4U TonePack front matter",
+  "type": "object",
+  "required": [
+    "apiVersion",
+    "kind",
+    "id",
+    "version",
+    "voice",
+    "emoji",
+    "closing_styles"
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "briefly4u/v1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(-[0-9A-Za-z.-]+)?$"
+    },
+    "status": {
+      "enum": [
+        "stable",
+        "beta",
+        "deprecated"
+      ],
+      "default": "beta"
+    },
+    "replaced_by": {
+      "type": "string"
+    },
+    "maintainers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^@[A-Za-z0-9-]+(/[A-Za-z0-9-]+)?$"
+      }
+    },
+    "license": {
+      "const": "MIT"
+    },
+    "checked": {
+      "type": "string",
+      "format": "date",
+      "description": "date the sources were last verified"
+    },
+    "kind": {
+      "const": "TonePack"
+    },
+    "voice": {
+      "type": "string"
+    },
+    "emoji": {
+      "type": "object",
+      "properties": {
+        "header": {
+          "type": "string"
+        },
+        "news": {
+          "type": "string"
+        },
+        "closing": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "closing_styles": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "bug",
+          "errmsg",
+          "codecmt",
+          "comic",
+          "takeaway",
+          "good_news",
+          "none"
+        ]
+      }
+    },
+    "punch_down": {
+      "const": false
+    },
+    "name": {
+      "type": "string"
+    },
+    "humour": {
+      "type": "string"
+    },
+    "exclamation_marks": {
+      "enum": [
+        "none",
+        "greeting_only",
+        "allowed"
+      ]
+    },
+    "greeting": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "origin": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

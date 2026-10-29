@@ -1,0 +1,10 @@
+{
+  "name": "briefly4u",
+  "version": "0.1.0",
+  "description": "Set up, tune and schedule your own daily brief in your own AI agent. Interviews you, writes profile.yaml, generates one skill per section and creates the schedule.",
+  "license": "MIT",
+  "author": {
+    "name": "Elleonor Kulesko"
+  },
+  "skills": "./router/"
+}

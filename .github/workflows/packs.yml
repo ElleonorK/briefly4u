@@ -1,0 +1,27 @@
+name: packs
+on:
+  pull_request:
+    paths: ["library/**", "schema/**"]
+  schedule:
+    - cron: "17 4 * * 1"   # weekly source-URL check, off the top of the hour
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: Lint packs (front matter schema, required sections, sample labels, tag contrast vs every theme, no secrets)
+        run: go run ./cmd/briefly4u lint-packs library/
+      - name: Changed packs bumped their version and CHANGELOG
+        if: github.event_name == 'pull_request'
+        run: go run ./cmd/briefly4u lint-packs library/ --require-bump --base origin/${{ github.base_ref }}
+      - name: Source URLs reachable (network)
+        if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'check-urls')
+        run: go run ./cmd/briefly4u lint-packs library/ --network --timeout 10s

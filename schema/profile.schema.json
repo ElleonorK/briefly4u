@@ -1,0 +1,806 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:briefly4u:schema:profile",
+  "title": "Briefly4U profile",
+  "description": "One user's daily brief configuration. apiVersion/kind identify the document type and version; see LOW-LEVEL.md §3 for the versioning and migration policy.",
+  "type": "object",
+  "required": [
+    "apiVersion",
+    "kind",
+    "identity",
+    "locale",
+    "sections"
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "briefly4u/v1"
+    },
+    "kind": {
+      "const": "Profile"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$"
+        },
+        "labels": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "kit": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "target": {
+          "$ref": "#/$defs/target"
+        },
+        "installed_via": {
+          "enum": [
+            "plugin",
+            "builder",
+            "cli"
+          ]
+        },
+        "runner": {
+          "enum": [
+            "grokbot_routine",
+            "claude_schedule",
+            "cursor_automation",
+            "chatgpt_task",
+            "github_actions",
+            "cron"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "identity": {
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "address_as": {
+          "type": "string"
+        },
+        "reader_level": {
+          "enum": [
+            "general",
+            "technical",
+            "devops",
+            "executive"
+          ],
+          "default": "general"
+        }
+      },
+      "additionalProperties": false
+    },
+    "locale": {
+      "type": "object",
+      "required": [
+        "timezone"
+      ],
+      "properties": {
+        "language": {
+          "type": "string",
+          "default": "en"
+        },
+        "region": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$"
+        },
+        "timezone": {
+          "type": "string",
+          "description": "IANA zone, e.g. Asia/Jerusalem"
+        },
+        "date_format": {
+          "type": "string"
+        },
+        "clock": {
+          "enum": [
+            "12h",
+            "24h"
+          ]
+        },
+        "first_day_of_week": {
+          "$ref": "#/$defs/weekday"
+        },
+        "units": {
+          "type": "object",
+          "properties": {
+            "temperature": {
+              "enum": [
+                "C",
+                "F"
+              ]
+            },
+            "wind": {
+              "enum": [
+                "kmh",
+                "mph",
+                "ms",
+                "kn"
+              ]
+            },
+            "rain": {
+              "enum": [
+                "mm",
+                "in"
+              ]
+            },
+            "waves": {
+              "enum": [
+                "m",
+                "ft"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "never_words": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "calendar_model": {
+      "type": "object",
+      "properties": {
+        "work_week": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/weekday"
+          },
+          "uniqueItems": true
+        },
+        "day_types": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/weekday"
+            }
+          }
+        },
+        "weekend_hides": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "window": {
+          "type": "object",
+          "description": "What counts as 'new' (DECISIONS.md #2). Default: since the last successful brief; the fixed window is the alternative and the fallback when there is no prior successful brief.",
+          "properties": {
+            "mode": {
+              "enum": [
+                "since_last_success",
+                "fixed"
+              ],
+              "default": "since_last_success"
+            },
+            "fixed": {
+              "$ref": "#/$defs/windowSpan",
+              "description": "Used when mode is fixed, and as the fallback. Default {from: 'yesterday 10:00', to: now}."
+            },
+            "first_workday": {
+              "$ref": "#/$defs/windowSpan",
+              "description": "Fixed-mode override for the first workday after a weekend."
+            },
+            "fallback": {
+              "const": "fixed",
+              "default": "fixed"
+            },
+            "max_lookback": {
+              "type": "string",
+              "pattern": "^[0-9]+h$",
+              "description": "Optional cap for since_last_success after a long gap, e.g. 72h."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "schedule": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "time": {
+            "type": "string",
+            "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+          },
+          "days": {
+            "type": "string"
+          },
+          "cron": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "basics": {
+      "type": "object",
+      "description": "Cheap-toggle tier. All keys optional; defaults derived per DESIGN.md §9.2a.",
+      "additionalProperties": true
+    },
+    "tone": {
+      "type": "string",
+      "default": "warm"
+    },
+    "theme": {
+      "type": "string",
+      "default": "calm-minimal"
+    },
+    "header": {
+      "type": "object"
+    },
+    "connections": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/connection"
+      }
+    },
+    "delivery": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/delivery"
+      }
+    },
+    "render": {
+      "type": "object"
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/section"
+      }
+    },
+    "custom": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/customEntry"
+      }
+    }
+  },
+  "patternProperties": {
+    "^x-": {}
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "target": {
+      "enum": [
+        "grokbot",
+        "cursor",
+        "claude",
+        "generic",
+        "actions",
+        "chatgpt"
+      ]
+    },
+    "weekday": {
+      "enum": [
+        "mon",
+        "tue",
+        "wed",
+        "thu",
+        "fri",
+        "sat",
+        "sun"
+      ]
+    },
+    "secretRef": {
+      "type": "string",
+      "pattern": "^(assistant|env|keychain):[A-Za-z0-9_./:@-]+$",
+      "description": "A reference to a secret held by the user's agent or secret store. Never the secret itself."
+    },
+    "connection": {
+      "type": "object",
+      "required": [
+        "id",
+        "provider",
+        "auth"
+      ],
+      "propertyNames": {
+        "not": {
+          "enum": [
+            "password",
+            "passwd",
+            "token",
+            "access_token",
+            "refresh_token",
+            "api_key",
+            "apikey",
+            "client_secret",
+            "secret",
+            "private_key",
+            "cookie"
+          ]
+        }
+      },
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "provider": {
+          "type": "string"
+        },
+        "auth": {
+          "enum": [
+            "assistant_connector",
+            "oauth_own_app",
+            "api_key",
+            "app_password",
+            "ics_url",
+            "none"
+          ]
+        },
+        "secret_ref": {
+          "$ref": "#/$defs/secretRef"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "patternProperties": {
+        "^secret_ref_[a-z_]+$": {
+          "$ref": "#/$defs/secretRef"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "auth": {
+                "not": {
+                  "const": "none"
+                }
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "secret_ref"
+            ]
+          }
+        }
+      ],
+      "additionalProperties": true
+    },
+    "delivery": {
+      "type": "object",
+      "required": [
+        "id",
+        "adapter"
+      ],
+      "propertyNames": {
+        "not": {
+          "enum": [
+            "password",
+            "passwd",
+            "token",
+            "access_token",
+            "refresh_token",
+            "api_key",
+            "apikey",
+            "client_secret",
+            "secret",
+            "private_key",
+            "cookie"
+          ]
+        }
+      },
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "adapter": {
+          "enum": [
+            "slack_dm",
+            "email",
+            "file",
+            "agent_chat"
+          ]
+        },
+        "connection": {
+          "type": "string"
+        },
+        "confirmed_at": {
+          "type": "string",
+          "format": "date"
+        }
+      },
+      "additionalProperties": true
+    },
+    "section": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "propertyNames": {
+        "not": {
+          "enum": [
+            "password",
+            "passwd",
+            "token",
+            "access_token",
+            "refresh_token",
+            "api_key",
+            "apikey",
+            "client_secret",
+            "secret",
+            "private_key",
+            "cookie"
+          ]
+        }
+      },
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^(calendar|weather|observances|messaging|email|news|warning|coming-up|closing|custom-[a-z0-9-]+)$"
+        },
+        "title": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "when": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "width": {
+          "enum": [
+            "full",
+            "half"
+          ]
+        },
+        "accent": {
+          "type": "string"
+        },
+        "hide_when_empty": {
+          "type": "boolean",
+          "default": true
+        },
+        "connection": {
+          "type": "string"
+        },
+        "pill": {
+          "type": "boolean"
+        },
+        "tone": {
+          "type": "string"
+        },
+        "layout": {
+          "type": "object"
+        },
+        "basics": {
+          "type": "object",
+          "description": "Cheap-toggle tier. All keys optional; defaults derived per DESIGN.md §9.2a.",
+          "additionalProperties": true
+        },
+        "settings": {
+          "type": "object",
+          "description": "Advanced tier.",
+          "additionalProperties": true
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "id": {
+                "const": "weather"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "settings": {
+                "properties": {
+                  "cities": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "$ref": "#/$defs/city"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "id": {
+                "const": "news"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "settings": {
+                "properties": {
+                  "topics": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/topicRef"
+                    }
+                  }
+                }
+              },
+              "basics": {
+                "properties": {
+                  "quality": {
+                    "enum": [
+                      "strict",
+                      "relaxed"
+                    ],
+                    "default": "strict",
+                    "description": "DECISIONS.md #3. strict = the reference bar; relaxed still requires reliable sources and something new inside the window."
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "city": {
+      "type": "object",
+      "required": [
+        "name",
+        "lat",
+        "lon"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$"
+        },
+        "lat": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        "lon": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        }
+      },
+      "additionalProperties": false
+    },
+    "topicRef": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "label": {
+          "type": "string"
+        },
+        "colour": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "pack": {
+          "type": "string"
+        },
+        "keywords": {
+          "type": "object",
+          "properties": {
+            "include": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "exclude": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "customEntry": {
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "section",
+        "name",
+        "source"
+      ],
+      "propertyNames": {
+        "not": {
+          "enum": [
+            "password",
+            "passwd",
+            "token",
+            "access_token",
+            "refresh_token",
+            "api_key",
+            "apikey",
+            "client_secret",
+            "secret",
+            "private_key",
+            "cookie"
+          ]
+        }
+      },
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "kind": {
+          "enum": [
+            "source",
+            "topic",
+            "faith",
+            "city",
+            "messaging_app",
+            "joke_source",
+            "event_feed",
+            "device",
+            "delivery"
+          ]
+        },
+        "section": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "source": {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "enum": [
+                "rss",
+                "atom",
+                "ics",
+                "json_api",
+                "manual"
+              ],
+              "description": "Feeds and APIs only at launch (DECISIONS.md #5); no HTML page scraping."
+            },
+            "url": {
+              "type": "string",
+              "pattern": "^https://"
+            },
+            "json_path": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "auth": {
+          "oneOf": [
+            {
+              "const": "none"
+            },
+            {
+              "type": "object",
+              "required": [
+                "secret_ref"
+              ],
+              "properties": {
+                "secret_ref": {
+                  "$ref": "#/$defs/secretRef"
+                },
+                "header": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "refresh": {
+          "enum": [
+            "every_run",
+            "daily",
+            "weekly"
+          ]
+        },
+        "trust": {
+          "enum": [
+            "trusted",
+            "leads_only"
+          ]
+        },
+        "colour": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "topics": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "items": {
+          "type": "array"
+        },
+        "visibility": {
+          "enum": [
+            "private",
+            "contribute"
+          ],
+          "default": "private"
+        }
+      },
+      "additionalProperties": false
+    },
+    "windowSpan": {
+      "type": "object",
+      "required": [
+        "from"
+      ],
+      "properties": {
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -1,0 +1,12 @@
+version: "2"
+run:
+  timeout: 5m
+linters:
+  default: standard
+  enable: [gosec, misspell, revive, bodyclose, errorlint]
+  settings:
+    misspell:
+      locale: US
+      ignore-rules: [colour, licence]   # British spellings are used in docs and pack fields
+formatters:
+  enable: [gofmt, goimports]

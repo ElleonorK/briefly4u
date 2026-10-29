@@ -1,0 +1,29 @@
+name: Pack proposal
+description: Propose a new or changed topic, tone, theme or faith pack
+labels: [pack, triage]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Pack kind
+      options: [topic, tone, theme, faith]
+    validations: { required: true }
+  - type: textarea
+    id: why
+    attributes: { label: "What it covers and who it's for" }
+    validations: { required: true }
+  - type: textarea
+    id: sources
+    attributes: { label: "Sources (with links), and for faiths the default source and how you verified it" }
+    validations: { required: true }
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I read CONTRIBUTING.md and the pack format in LOW-LEVEL.md §4
+          required: true
+        - label: Samples are marked REAL (date + URL) or EXAMPLE
+          required: true
+        - label: No private data and no credentials in the pack
+          required: true

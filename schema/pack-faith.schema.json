@@ -1,0 +1,189 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:briefly4u:schema:pack-faith",
+  "title": "Briefly4U FaithPack front matter",
+  "type": "object",
+  "required": [
+    "apiVersion",
+    "kind",
+    "id",
+    "version",
+    "label",
+    "default_source",
+    "show_options"
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "briefly4u/v1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(-[0-9A-Za-z.-]+)?$"
+    },
+    "status": {
+      "enum": [
+        "stable",
+        "beta",
+        "deprecated"
+      ],
+      "default": "beta"
+    },
+    "replaced_by": {
+      "type": "string"
+    },
+    "maintainers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^@[A-Za-z0-9-]+(/[A-Za-z0-9-]+)?$"
+      }
+    },
+    "license": {
+      "const": "MIT"
+    },
+    "checked": {
+      "type": "string",
+      "format": "date",
+      "description": "date the sources were last verified"
+    },
+    "kind": {
+      "const": "FaithPack"
+    },
+    "label": {
+      "type": "string"
+    },
+    "traditions": {
+      "type": "object"
+    },
+    "show_options": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "holidays",
+          "fasts",
+          "observances",
+          "native_date",
+          "times",
+          "weekly_card"
+        ]
+      }
+    },
+    "default_source": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "url"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "json_api",
+            "ics",
+            "rss",
+            "html_page",
+            "vetted_table",
+            "calendar_api",
+            "library"
+          ]
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^https?://"
+        },
+        "docs": {
+          "type": "string"
+        },
+        "auth": {
+          "enum": [
+            "none",
+            "api_key"
+          ]
+        },
+        "status": {
+          "enum": [
+            "verified",
+            "beta"
+          ]
+        },
+        "note": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "alternatives": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "type",
+          "url"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "enum": [
+              "json_api",
+              "ics",
+              "rss",
+              "html_page",
+              "vetted_table",
+              "calendar_api",
+              "library"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "pattern": "^https?://"
+          },
+          "docs": {
+            "type": "string"
+          },
+          "auth": {
+            "enum": [
+              "none",
+              "api_key"
+            ]
+          },
+          "status": {
+            "enum": [
+              "verified",
+              "beta"
+            ]
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "weekly_card": {
+      "type": "object"
+    },
+    "card": {
+      "enum": [
+        "shared",
+        "own"
+      ]
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

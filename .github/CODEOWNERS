@@ -1,0 +1,6 @@
+# Not active yet (DECISIONS.md #12): the maintainer reviews every change herself for now.
+# Later, once there are regular contributors, add area reviewers across the whole library, e.g.:
+#   /library/topics/   @<reviewer>
+#   /library/tones/    @<reviewer>
+#   /library/themes/   @<reviewer>
+#   /library/faiths/   @<reviewer>

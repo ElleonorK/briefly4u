@@ -1,0 +1,12 @@
+# EXAMPLE "add your own" entry. Paste under `custom:` in your profile. Private by default.
+- id: example-cert-feed
+  enabled: true
+  kind: source
+  section: news
+  name: "EXAMPLE · national CERT alerts"
+  source: { type: rss, url: "https://example.invalid/alerts.rss" }
+  auth: none
+  refresh: every_run
+  trust: trusted
+  topics: [vuln]
+  visibility: private

@@ -1,0 +1,48 @@
+# Optional: deploys the static site to GitHub Pages (<user>.github.io/briefly4u). If the maintainer serves it from
+# her own hosting provider instead, that provider runs the same two build steps (wasm + `hugo --source site`).
+name: site
+on:
+  push:
+    branches: [main]
+    paths: ["site/**", "library/**", "schema/**", "cmd/briefly4u-wasm/**", "internal/**", "templates/**"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0              # enableGitInfo
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+      - name: Build the generator for the browser
+        run: |
+          GOOS=js GOARCH=wasm go build -trimpath -ldflags="-s -w" -o site/static/builder/briefly4u.wasm ./cmd/briefly4u-wasm
+          cp "$(go env GOROOT)/lib/wasm/wasm_exec.js" site/static/builder/ 2>/dev/null || cp "$(go env GOROOT)/misc/wasm/wasm_exec.js" site/static/builder/   # moved to lib/wasm in Go 1.24
+      - uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: "0.150.0"     # TODO: pin to the version tested locally
+          extended: true
+      - id: pages
+        uses: actions/configure-pages@v5
+      - run: hugo --source site --minify --baseURL "${{ steps.pages.outputs.base_url }}/"
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: site/public
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,131 @@
+# GoReleaser v2. Runs on tags v*.*.* from .github/workflows/release.yml. Check locally: goreleaser check && goreleaser release --snapshot --clean
+# Owner: the maintainer's personal GitHub account (no org, DECISIONS.md #11), taken from GITHUB_REPOSITORY_OWNER in CI.
+# Homepage: BRIEFLY4U_HOMEPAGE, set in release.yml (<user>.github.io/briefly4u or the maintainer's own domain).
+# Package names (tap, bucket, winget id, AUR) are registered at the first release, not before.
+# macOS: Homebrew formula only (see packaging/homebrew/) (DECISIONS.md #13: no Apple notarisation, no developer programme, no App Store).
+version: 2
+project_name: briefly4u
+
+before:
+  hooks:
+    - go mod tidy
+    - go test ./...
+
+builds:
+  - id: briefly4u
+    main: ./cmd/briefly4u
+    binary: briefly4u
+    env: [CGO_ENABLED=0]
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    flags: [-trimpath]
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.CommitDate}}
+    mod_timestamp: "{{ .CommitTimestamp }}"   # reproducible builds
+
+archives:
+  - id: default
+    formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files: [LICENSE, README.md]
+
+checksum:
+  name_template: checksums.txt
+
+# Keyless signing via Sigstore (GitHub OIDC); verify with cosign verify-blob --bundle checksums.txt.sigstore.json ...
+signs:
+  - cmd: cosign
+    artifacts: checksum
+    signature: "${artifact}.sigstore.json"
+    args: ["sign-blob", "--bundle=${signature}", "${artifact}", "--yes"]
+
+sboms:
+  - artifacts: archive
+    cmd: syft
+    args: ["${artifact}", "--output", "spdx-json=${document}"]
+
+nfpms:
+  - id: packages
+    package_name: briefly4u
+    vendor: Elleonor Kulesko
+    maintainer: "Elleonor Kulesko <TODO@example.invalid>"   # TODO: the maintainer's public contact address
+    homepage: "{{ .Env.BRIEFLY4U_HOMEPAGE }}"
+    description: Set up your own daily brief and generate it for your own AI agent.
+    license: MIT
+    formats: [deb, rpm, apk]
+    bindir: /usr/bin
+    contents:
+      - src: LICENSE
+        dst: /usr/share/doc/briefly4u/LICENSE
+
+# Homebrew: NOT done by GoReleaser. Its formula pipe (`brews`) is deprecated (soft since v2.10, hard since v2.16)
+# and its replacement (`homebrew_casks`) needs a quarantine workaround for unsigned binaries. Instead the
+# release workflow renders packaging/homebrew/briefly4u.rb.tmpl, a source-build formula (built locally by
+# Homebrew with Go, so no Apple signing is involved), and pushes it to <user>/homebrew-tap.
+
+scoops:
+  - name: briefly4u
+    repository:
+      owner: "{{ .Env.GITHUB_REPOSITORY_OWNER }}"
+      name: scoop-bucket
+      token: "{{ .Env.SCOOP_BUCKET_TOKEN }}"
+    homepage: "{{ .Env.BRIEFLY4U_HOMEPAGE }}"
+    description: Set up your own daily brief for your own AI agent.
+    license: MIT
+
+winget:
+  - name: Briefly4U
+    publisher: Elleonor Kulesko
+    package_identifier: TODO.Briefly4U   # TODO: choose the winget id at the first release (e.g. <Publisher>.Briefly4U)
+    short_description: Set up your own daily brief for your own AI agent.
+    license: MIT
+    homepage: "{{ .Env.BRIEFLY4U_HOMEPAGE }}"
+    repository:
+      owner: "{{ .Env.GITHUB_REPOSITORY_OWNER }}"
+      name: winget-pkgs              # a fork of microsoft/winget-pkgs
+      branch: "briefly4u-{{ .Version }}"
+      token: "{{ .Env.WINGET_TOKEN }}"
+      pull_request:
+        enabled: true
+        draft: false
+        base:
+          owner: microsoft
+          name: winget-pkgs
+          branch: master
+
+aurs:
+  - name: briefly4u-bin
+    homepage: "{{ .Env.BRIEFLY4U_HOMEPAGE }}"
+    description: Set up your own daily brief for your own AI agent
+    maintainers: ["Elleonor Kulesko <TODO@example.invalid>"]
+    license: MIT
+    private_key: "{{ .Env.AUR_KEY }}"
+    git_url: "ssh://aur@aur.archlinux.org/briefly4u-bin.git"
+    package: |-
+      install -Dm755 "./briefly4u" "${pkgdir}/usr/bin/briefly4u"
+      install -Dm644 "./LICENSE" "${pkgdir}/usr/share/licenses/briefly4u/LICENSE"
+
+release:
+  github:
+    owner: "{{ .Env.GITHUB_REPOSITORY_OWNER }}"
+    name: briefly4u
+  prerelease: auto
+  draft: false
+
+changelog:
+  use: github
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\(.+\))??!?:.+$'
+      order: 0
+    - title: Library packs
+      regexp: '^.*?pack(\(.+\))??!?:.+$'
+      order: 1
+    - title: Fixes
+      regexp: '^.*?fix(\(.+\))??!?:.+$'
+      order: 2
+    - title: Other
+      order: 999

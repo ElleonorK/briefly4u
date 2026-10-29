@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:briefly4u:schema:pack-theme",
+  "title": "Briefly4U ThemePack front matter",
+  "type": "object",
+  "required": [
+    "apiVersion",
+    "kind",
+    "id",
+    "version",
+    "mode",
+    "fonts"
+  ],
+  "properties": {
+    "apiVersion": {
+      "const": "briefly4u/v1"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(-[0-9A-Za-z.-]+)?$"
+    },
+    "status": {
+      "enum": [
+        "stable",
+        "beta",
+        "deprecated"
+      ],
+      "default": "beta"
+    },
+    "replaced_by": {
+      "type": "string"
+    },
+    "maintainers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^@[A-Za-z0-9-]+(/[A-Za-z0-9-]+)?$"
+      }
+    },
+    "license": {
+      "const": "MIT"
+    },
+    "checked": {
+      "type": "string",
+      "format": "date",
+      "description": "date the sources were last verified"
+    },
+    "kind": {
+      "const": "ThemePack"
+    },
+    "mode": {
+      "enum": [
+        "dark",
+        "light"
+      ]
+    },
+    "fonts": {
+      "type": "object",
+      "properties": {
+        "display": {
+          "type": "string"
+        },
+        "body": {
+          "type": "string"
+        },
+        "mono": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "font_url": {
+      "type": "string",
+      "pattern": "^https://"
+    },
+    "name": {
+      "type": "string"
+    },
+    "origin": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Theme packs are CSS files; the front matter is YAML inside the file's first comment: /*--- ... ---*/"
+}
